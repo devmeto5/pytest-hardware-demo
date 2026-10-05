@@ -1,16 +1,16 @@
 # Pytest Hardware Demo — ATM Cash Dispenser
 
-Небольшой учебный проект: автоматические тесты модуля выдачи купюр банкомата на Python и pytest. Запускается на обычном компьютере, без подключения оборудования.
+A small, runnable example of equipment-oriented testing with Python and pytest. It uses a simulated ATM cash dispenser, so you can explore normal operation and device failures without physical hardware.
 
-## Что здесь тестируется
+## What this project demonstrates
 
-В проекте есть **программный симулятор**, а не драйвер настоящего банкомата. Одна кассета содержит 10 купюр номиналом 100 условных денежных единиц. Метод `dispense(300)` выдаёт три купюры и уменьшает остаток до семи.
+The simulator contains one cassette with ten banknotes, each worth 100 units. Calling `dispense(300)` returns three banknotes and leaves seven in stock.
 
-Pytest — универсальный инструмент запуска тестов Python. Его можно применять к оборудованию через драйверы и интерфейсы устройства. Этот пример показывает структуру таких проверок; реального Hardware-in-the-Loop (HIL) стенда здесь нет.
+Pytest is a general-purpose Python testing framework. It can test equipment through device drivers and interfaces. This project demonstrates the test structure using a software model; it is not a Hardware-in-the-Loop (HIL) test bench.
 
-## Быстрый запуск
+## Quick start
 
-Требуется Python 3.10 или новее.
+Requires Python 3.10 or later.
 
 ```bash
 git clone https://github.com/devmeto5/pytest-hardware-demo.git
@@ -18,7 +18,7 @@ cd pytest-hardware-demo
 python -m venv .venv
 ```
 
-Активируйте окружение:
+Activate the virtual environment:
 
 ```powershell
 # Windows PowerShell
@@ -30,14 +30,16 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-Установите зависимость и запустите проверки:
+Install the dependency and run the tests:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m pytest -v
 ```
 
-## Самый простой тест
+Expected result: **19 passed**.
+
+## A simple test
 
 ```python
 from dispenser import CashDispenser
@@ -48,40 +50,40 @@ def test_dispenses_three_notes():
     assert device.notes == 7
 ```
 
-Первый `assert` проверяет число выданных купюр, второй — остаток в кассете. Если поведение отличается от ожидаемого, pytest показывает ошибку.
+The first assertion checks how many banknotes were delivered. The second checks the remaining stock. Pytest reports a failure if the actual behavior differs from either expectation.
 
-## Покрытые сценарии
+## Test scenarios
 
-| Сценарий | Ожидаемый результат |
+| Scenario | Expected behavior |
 | --- | --- |
-| Выдача 100, 300 и 1000 | Правильное число купюр и остаток |
-| Нулевая, отрицательная, некратная сумма или неверный тип | Отказ без изменения остатка |
-| Купюр недостаточно | Ошибка `insufficient notes`, остаток сохранён |
-| Устройство отключено | Ошибка `device offline`, остаток сохранён |
-| Замятие купюр | Ошибка `cash jam`, остаток сохранён |
-| Замятие устранено | Следующая выдача успешна |
-| Кассета опустошена | Повторная выдача отклоняется |
-| Некорректный начальный запас | Ошибка при создании симулятора |
+| Withdraw 100, 300, or 1000 | Deliver the correct number of notes and update stock |
+| Zero, negative, non-multiple amount, or invalid type | Reject the request without changing stock |
+| Insufficient banknotes | Raise `insufficient notes` and preserve stock |
+| Device offline | Raise `device offline` and preserve stock |
+| Cash jam | Raise `cash jam` and preserve stock |
+| Jam cleared | Allow the next withdrawal |
+| Empty cassette | Reject the next withdrawal |
+| Invalid initial stock | Reject simulator construction |
 
-Всего 19 тестовых случаев с учётом параметризации. Фикстура создаёт новое устройство для каждого теста, поэтому сценарии не зависят от порядка запуска.
+There are 19 test cases, including parameterized inputs. A pytest fixture creates a fresh dispenser for each test, keeping the scenarios independent of execution order.
 
-## Структура
+## Project structure
 
 ```text
-dispenser.py             # Симулятор устройства и его ошибки
-tests/test_dispenser.py  # Тесты, фикстура и наборы входных данных
-requirements.txt        # Зафиксированная версия pytest
-pytest.ini              # Настройки запуска
+dispenser.py             # Device simulator and error type
+tests/test_dispenser.py  # Tests, fixture, and parameterized inputs
+requirements.txt        # Pinned pytest dependency
+pytest.ini              # Test discovery settings
 ```
 
-Для отчёта в формате JUnit XML:
+To generate a JUnit XML report:
 
 ```bash
 python -m pytest --junitxml=test-results.xml
 ```
 
-## Переход к настоящему оборудованию
+## Connecting real equipment
 
-Для физического устройства нужен отдельный адаптер к документированному API производителя, например через USB, serial или TCP. Вместо изменения флагов `online` и `jammed` стенд должен управлять состоянием оборудования и независимо проверять датчики, ответы и таймауты.
+A physical device needs an adapter for its manufacturer's documented interface, such as USB, serial, or TCP. A real test bench must control device states and independently verify sensor readings, responses, and timeouts instead of setting the simulator's `online` and `jammed` flags.
 
-Симулятор намеренно упрощён: при любой ошибке запас не меняется. Настоящий механизм может частично выдать или удержать купюры; такие состояния требуют отдельных сценариев. Здесь не моделируются счета клиентов, списания, протокол связи или медицинские устройства. Успешные тесты подтверждают только поведение учебной модели, а не исправность или сертификацию оборудования.
+This simulator deliberately assumes that failures leave stock unchanged. A real dispenser may partially deliver or retain banknotes; those outcomes need additional scenarios. The example does not model customer accounts, financial transactions, a communication protocol, or medical devices. Passing these tests validates the educational model only, not physical equipment or regulatory compliance.
