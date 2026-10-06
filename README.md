@@ -1,4 +1,4 @@
-# Pytest Hardware Demo — ATM Cash Dispenser
+# Pytest Hardware Demo - ATM Cash Dispenser
 
 A small, runnable example of equipment-oriented testing with Python and pytest. It uses a simulated ATM cash dispenser, so you can explore normal operation and device failures without physical hardware.
 
